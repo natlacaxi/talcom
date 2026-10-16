@@ -1,13 +1,14 @@
 {
   "name": "Talco Mobilités – Trains en direct",
-  "short_name": "Talco",
+  "id": "./",
+  "short_name": "Talco Mobilités",
   "description": "Trains en direct en Île-de-France : Talco Mobilités, TER ZOU !, IDFM et Lignes d'Azur.",
   "lang": "fr",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
-  "background_color": "#f4f4f2",
+  "background_color": "#ffffff",
   "theme_color": "#2d1670",
   "categories": ["travel", "navigation", "utilities"],
   "icons": [
