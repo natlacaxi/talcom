@@ -17,6 +17,13 @@ PORT = int(os.environ.get("PORT", "8000"))
 
 
 class Handler(SimpleHTTPRequestHandler):
+    # Le manifeste de l'appli installable doit être servi avec le bon type MIME
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".webmanifest": "application/manifest+json",
+        ".js": "text/javascript",
+    }
+
     def _json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
