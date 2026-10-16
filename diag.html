@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic – Talco Mobilités</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:18px;background:#eef3f8;color:#14171f}
+main{max-width:640px;margin:0 auto}h1{font-size:1.3rem;margin:0 0 4px}p.s{color:#5d6677;margin:0 0 16px;font-size:.9rem}
+.r{display:flex;gap:10px;padding:10px 12px;margin-bottom:6px;background:#fff;border-radius:12px;align-items:flex-start}
+.r b{flex:none;width:1.4em}.ok b{color:#1fa971}.ko b{color:#d32f2f}.wa b{color:#f59b00}
+.r small{display:block;color:#5d6677;word-break:break-all}.r img{width:40px;height:40px;border-radius:8px;margin-left:auto;background:#ddd}
+h2{font-size:1rem;margin:20px 0 8px}
+</style></head><body><main>
+<h1>Diagnostic de l'installation</h1>
+<p class="s">Ouvre d'abord la page principale une fois, puis cette page. Chaque ligne doit être verte.</p>
+<div id="out"></div>
+<script>
+const out=document.getElementById('out');
+const row=(st,t,d,img)=>{const e=document.createElement('div');e.className='r '+st;
+ e.innerHTML='<b>'+({ok:'✓',ko:'✗',wa:'!'})[st]+'</b><div>'+t+(d?'<small></small>':'')+'</div>'+(img?'<img>':'');
+ if(d)e.querySelector('small').textContent=d; if(img)e.querySelector('img').src=img; out.appendChild(e);};
+const head=(t)=>{const h=document.createElement('h2');h.textContent=t;out.appendChild(h);};
+const get=async(u)=>{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});return r;};
+const img=(u)=>new Promise((ok)=>{const i=new Image();i.onload=()=>ok({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>ok(null);i.src=u+'?t='+Date.now();});
+(async()=>{
+ head('Adresse');
+ row(location.protocol==='https:'?'ok':'ko','Site en https',location.href);
+
+ head('Page principale');
+ try{const r=await get('index.html');const t=await r.text();
+  row(r.ok?'ok':'ko','index.html accessible',String(r.status));
+  row(/rel="manifest"/.test(t)?'ok':'ko','La page déclare le manifeste');
+  row(/serviceWorker\.register/.test(t)?'ok':'ko','La page enregistre le service worker');
+ }catch(e){row('ko','index.html illisible',e.message);}
+
+ head('Manifeste');
+ let mf=null;
+ try{const r=await get('manifest.webmanifest');
+  row(r.ok?'ok':'ko','manifest.webmanifest accessible',r.status+' · '+(r.headers.get('content-type')||'type inconnu'));
+  mf=await r.json();row('ok','Manifeste lisible (JSON valide)');
+ }catch(e){row('ko','Manifeste illisible ou absent',e.message);}
+ if(mf){
+  row(mf.name?'ok':'ko','Nom : '+(mf.name||'absent'));
+  row(mf.display==='standalone'?'ok':'wa','Affichage : '+mf.display);
+  try{const u=new URL(mf.start_url,location.href);const r=await get(u.pathname+u.search);row(r.ok?'ok':'ko','Page de démarrage accessible',u.pathname+u.search+' → '+r.status);}catch(e){row('ko','Page de démarrage inaccessible',e.message);}
+  let has192=false,has512=false;
+  for(const ic of mf.icons||[]){
+   const u=new URL(ic.src,location.href).href, r=await img(u);
+   const sz=ic.sizes||'';
+   if(r&&/192/.test(sz)&&/any/.test(ic.purpose||'any'))has192=true;
+   if(r&&/512/.test(sz)&&/any/.test(ic.purpose||'any'))has512=true;
+   row(r?'ok':'ko','Icône '+sz+' ('+(ic.purpose||'any')+')'+(r?' chargée : '+r.w+'×'+r.h:' INTROUVABLE'),u,r?u:'');
+  }
+  row(has192?'ok':'ko','Icône 192×192 « any » valide');
+  row(has512?'ok':'ko','Icône 512×512 « any » valide');
+ }
+
+ head('Service worker');
+ try{const r=await get('sw.js');const t=await r.text();
+  row(r.ok?'ok':'ko','sw.js accessible',String(r.status));
+  const files=[...t.matchAll(/'([^'\/][^']*\.(?:png|ico|html|webmanifest)|\.\/)'/g)].map(m=>m[1]).filter(f=>f!=='./').filter((f,i,a)=>a.indexOf(f)===i);
+  for(const f of files){const x=await get(f);row(x.ok?'ok':'wa','Fichier du cache : '+f,x.ok?'':'ABSENT ('+x.status+') – ajoute-le à la racine du dépôt');}
+ }catch(e){row('ko','sw.js illisible',e.message);}
+ if('serviceWorker' in navigator){
+  const reg=await navigator.serviceWorker.getRegistration('./');
+  if(!reg)row('ko','Service worker non enregistré','Ouvre la page principale, recharge deux fois, puis reviens ici.');
+  else{const st=reg.active?'actif':reg.waiting?'en attente':reg.installing?'en cours d\'installation':'inconnu';
+   row(reg.active?'ok':'wa','Service worker '+st,reg.scope);}
+ }else row('ko','Ce navigateur ne gère pas les service workers');
+
+ head('Appareil');
+ const std=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+ row(std?'ok':'wa',std?'Ouvert comme une appli installée':'Ouvert dans le navigateur (normal ici)');
+ row('wa',navigator.userAgent);
+})();
+</script></main></body></html>
