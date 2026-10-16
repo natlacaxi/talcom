@@ -26,8 +26,8 @@
 <!-- Application installable (iOS, Android, Windows, Linux, macOS) -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" id="fav" type="image/png" sizes="48x48" href="icons/favicon-48.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" id="fav" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Talco Mobilités">
@@ -433,7 +433,7 @@ const root = document.documentElement;
 const logos = [...document.querySelectorAll('.logo')];
 
 /* ---------- Favicon : suit le thème du navigateur (onglets clairs ou sombres) ---------- */
-const FAVICONS = { light: 'icons/favicon-48.png', dark: 'icons/favicon-dark-48.png' };
+const FAVICONS = { light: 'favicon-48.png', dark: 'favicon-dark-48.png' };
 const osDark = matchMedia('(prefers-color-scheme: dark)');
 const setFavicon = () => $('fav').setAttribute('href', osDark.matches ? FAVICONS.dark : FAVICONS.light);
 setFavicon();
